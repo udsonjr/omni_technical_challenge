@@ -37,6 +37,8 @@ describe('UsersController', () => {
         });
 
         it('deve chamar service.signup com o dto recebido', () => {
+            service.signup.mockReturnValue(mockPublicUser());
+
             const dto = { username: 'joao', password: '123456', birthdate: '2000-01-01' };
             controller.signup(dto);
 
