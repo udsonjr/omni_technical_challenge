@@ -1,3 +1,3 @@
 export class UpdateUserDto {
-    birthdate?: string;
+  birthdate?: string;
 }

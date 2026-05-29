@@ -1,4 +1,4 @@
 export class TransferRequestDto {
-    toId: string;
-    amount: number;
+  toId: string;
+  amount: number;
 }

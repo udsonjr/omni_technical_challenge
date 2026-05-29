@@ -6,22 +6,19 @@ import { TransferRequestDto } from './dto/transfer-request.dto';
 
 @Controller('transfer')
 export class TransferController {
+  constructor(private readonly transferService: TransferService) {}
 
-    constructor(private readonly transferService: TransferService) {}
-
-    // API 7: Transferência de dinheiro entre usuários (Autenticado)
-    @Post()
-    @HttpCode(HttpStatus.NO_CONTENT)
-    refreshToken(@BearerToken() token: string, @Body() dto: TransferRequestDto) {
-        try {
-            this.transferService.transfer(token, dto);
-        }
-        catch (error) {
-            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
-                throw error;
-            }
-            throw new BadRequestException('Erro ao realizar transferência');
-        }
+  // API 7: Transferência de dinheiro entre usuários (Autenticado)
+  @Post()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  refreshToken(@BearerToken() token: string, @Body() dto: TransferRequestDto) {
+    try {
+      this.transferService.transfer(token, dto);
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new BadRequestException('Erro ao realizar transferência');
     }
+  }
 }
-

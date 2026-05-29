@@ -1,4 +1,4 @@
-name: Unit Tests
+name: CICD Pipeline
 
 on:
   push:
@@ -27,3 +27,9 @@ jobs:
 
       - name: Executar testes unitários
         run: npm test -- --no-coverage
+
+      - name: Verificar lint
+        run: npm run lint:check
+
+      - name: Verificar formatação
+        run: npm run format:check

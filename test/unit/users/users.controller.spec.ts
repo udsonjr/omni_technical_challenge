@@ -6,325 +6,326 @@ import { AuthToken } from '../../../src/auth/auth.interfaces';
 import { Transaction } from '../../../src/users/users.interface';
 
 const mockPublicUser = (overrides: Partial<PublicUserDto> = {}): PublicUserDto =>
-    Object.assign(new PublicUserDto({
-        id: 'uuid-1',
-        username: 'joao',
-        password: '123456',
-        birthdate: '2000-01-01',
-        balance: 0,
-        transactions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }), overrides);
+  Object.assign(
+    new PublicUserDto({
+      id: 'uuid-1',
+      username: 'joao',
+      password: '123456',
+      birthdate: '2000-01-01',
+      balance: 0,
+      transactions: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }),
+    overrides,
+  );
 
 const mockAuthToken = (overrides: Partial<AuthToken> = {}): AuthToken => ({
-    id: 'uuid-1',
-    userId: 'uuid-1',
-    token: 'token-1',
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60),
-    expired: false,
-    ...overrides,
+  id: 'uuid-1',
+  userId: 'uuid-1',
+  token: 'token-1',
+  createdAt: new Date(),
+  expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+  expired: false,
+  ...overrides,
 });
 
 describe('UsersController', () => {
-    let controller: UsersController;
-    let service: jest.Mocked<UsersService>;
+  let controller: UsersController;
+  let service: jest.Mocked<UsersService>;
 
-    beforeEach(() => {
-        service = {
-            signup: jest.fn(),
-            signin: jest.fn(),
-            getAllUsers: jest.fn(),
-            getUserBalance: jest.fn(),
-            getUserTransactions: jest.fn(),
-            updateUser: jest.fn(),
-            deleteUser: jest.fn(),
-        } as unknown as jest.Mocked<UsersService>;
+  beforeEach(() => {
+    service = {
+      signup: jest.fn(),
+      signin: jest.fn(),
+      getAllUsers: jest.fn(),
+      getUserBalance: jest.fn(),
+      getUserTransactions: jest.fn(),
+      updateUser: jest.fn(),
+      deleteUser: jest.fn(),
+    } as unknown as jest.Mocked<UsersService>;
 
-        controller = new UsersController(service);
+    controller = new UsersController(service);
+  });
+
+  describe('signup', () => {
+    it('deve retornar { id } quando a service cria o usuário com sucesso', () => {
+      service.signup.mockReturnValue(mockPublicUser({ id: 'uuid-1' }));
+
+      const result = controller.signup({
+        username: 'joao',
+        password: '123456',
+        birthdate: '2000-01-01',
+      });
+
+      expect(result).toEqual({ id: 'uuid-1' });
     });
 
-    describe('signup', () => {
-        it('deve retornar { id } quando a service cria o usuário com sucesso', () => {
-            service.signup.mockReturnValue(mockPublicUser({ id: 'uuid-1' }));
+    it('deve chamar service.signup com o dto recebido', () => {
+      service.signup.mockReturnValue(mockPublicUser());
 
-            const result = controller.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' });
+      const dto = { username: 'joao', password: '123456', birthdate: '2000-01-01' };
+      controller.signup(dto);
 
-            expect(result).toEqual({ id: 'uuid-1' });
-        });
-
-        it('deve chamar service.signup com o dto recebido', () => {
-            service.signup.mockReturnValue(mockPublicUser());
-
-            const dto = { username: 'joao', password: '123456', birthdate: '2000-01-01' };
-            controller.signup(dto);
-
-            expect(service.signup).toHaveBeenCalledWith(dto);
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.signup.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' })
-            ).toThrow(BadRequestException);
-        });
-
-        it('deve preservar a mensagem da BadRequestException original da service', () => {
-            service.signup.mockImplementation(() => {
-                throw new BadRequestException('Usuário já cadastrado');
-            });
-
-            try {
-                controller.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' });
-            } catch (err) {
-                expect(err).toBeInstanceOf(BadRequestException);
-                expect((err as BadRequestException).message).toBe('Usuário já cadastrado');
-            }
-        });
+      expect(service.signup).toHaveBeenCalledWith(dto);
     });
 
-    describe('signin', () => {
-        it('deve retornar { token, expiresAt } quando o login é feito com sucesso', () => {
-            const expectedToken = 'token-1';
-            service.signin.mockReturnValue(mockAuthToken({ token: expectedToken }) as any);
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.signup.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
 
-            const result = controller.signin({ username: 'joao', password: '123456' });
-
-            expect(result.token).toEqual(expectedToken);
-        });
-
-        it('deve chamar service.signin com o dto recebido', () => {
-            service.signin.mockReturnValue(mockAuthToken() as any);
-
-            const dto = { username: 'joao', password: '123456' };
-            controller.signin(dto);
-
-            expect(service.signin).toHaveBeenCalledWith(dto);
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.signin.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.signin({ username: 'joao', password: '123456' })
-            ).toThrow(BadRequestException);
-        });
-
-        it('deve preservar a mensagem da BadRequestException original da service', () => {
-            const errorMessage = 'Username ou password inválidos';
-            service.signin.mockImplementation(() => {
-                throw new BadRequestException(errorMessage);
-            });
-
-            try {
-                controller.signin({ username: 'joao', password: '123456' });
-            } catch (err) {
-                expect(err).toBeInstanceOf(BadRequestException);
-                expect((err as BadRequestException).message).toBe(errorMessage);
-            }
-        });
+      expect(() =>
+        controller.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' }),
+      ).toThrow(BadRequestException);
     });
 
-    describe('getAllUsers', () => {
-        it('deve retornar uma lista de usuários quando o token é válido', () => {
-            const expectedUserId = 'uuid-1';
-            service.getAllUsers.mockReturnValue([mockPublicUser({ id: expectedUserId })]);
+    it('deve preservar a mensagem da BadRequestException original da service', () => {
+      service.signup.mockImplementation(() => {
+        throw new BadRequestException('Usuário já cadastrado');
+      });
 
-            const result = controller.getAllUsers('token-1');
+      try {
+        controller.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' });
+      } catch (err) {
+        expect(err).toBeInstanceOf(BadRequestException);
+        expect((err as BadRequestException).message).toBe('Usuário já cadastrado');
+      }
+    });
+  });
 
-            expect(result.length).toBeGreaterThan(0);
-            expect(result[0].id).toBe(expectedUserId);
-        });
+  describe('signin', () => {
+    it('deve retornar { token, expiresAt } quando o login é feito com sucesso', () => {
+      const expectedToken = 'token-1';
+      service.signin.mockReturnValue(mockAuthToken({ token: expectedToken }) as any);
 
-        it('deve chamar service.getAllUsers com o token recebido', () => {
-            service.getAllUsers.mockReturnValue([]);
+      const result = controller.signin({ username: 'joao', password: '123456' });
 
-            controller.getAllUsers('token-1');
-
-            expect(service.getAllUsers).toHaveBeenCalledWith('token-1');
-        });
-
-        it('deve preservar UnauthorizedException original da service', () => {
-            service.getAllUsers.mockImplementation(() => {
-                throw new UnauthorizedException('Você não tem permissão para consultar usuários');
-            });
-
-            try {
-                controller.getAllUsers('token-invalido');
-            } catch (err) {
-                expect(err).toBeInstanceOf(UnauthorizedException);
-            }
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.getAllUsers.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.getAllUsers('token-1')
-            ).toThrow(BadRequestException);
-        });
+      expect(result.token).toEqual(expectedToken);
     });
 
-    describe('getBalance', () => {
-        it('deve retornar { balance } quando o token é válido', () => {
-            service.getUserBalance.mockReturnValue(150);
+    it('deve chamar service.signin com o dto recebido', () => {
+      service.signin.mockReturnValue(mockAuthToken() as any);
 
-            const result = controller.getBalance('token-1');
+      const dto = { username: 'joao', password: '123456' };
+      controller.signin(dto);
 
-            expect(result).toEqual({ balance: 150 });
-        });
-
-        it('deve chamar service.getUserBalance com o token recebido', () => {
-            service.getUserBalance.mockReturnValue(0);
-
-            controller.getBalance('token-1');
-
-            expect(service.getUserBalance).toHaveBeenCalledWith('token-1');
-        });
-
-        it('deve preservar UnauthorizedException original da service', () => {
-            service.getUserBalance.mockImplementation(() => {
-                throw new UnauthorizedException('Você não tem permissão para consultar saldo');
-            });
-
-            try {
-                controller.getBalance('token-invalido');
-            } catch (err) {
-                expect(err).toBeInstanceOf(UnauthorizedException);
-            }
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.getUserBalance.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.getBalance('token-1')
-            ).toThrow(BadRequestException);
-        });
+      expect(service.signin).toHaveBeenCalledWith(dto);
     });
 
-    describe('getTransactions', () => {
-        it('deve retornar a lista de transações do usuário autenticado', () => {
-            const transactions: Transaction[] = [{ type: 'sent', toId: 'uuid-2', amount: 50, date: new Date().toISOString() }];
-            service.getUserTransactions.mockReturnValue(transactions);
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.signin.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
 
-            const result = controller.getTransactions('token-1');
-
-            expect(result).toEqual(transactions);
-        });
-
-        it('deve chamar service.getUserTransactions com o token recebido', () => {
-            service.getUserTransactions.mockReturnValue([]);
-
-            controller.getTransactions('token-1');
-
-            expect(service.getUserTransactions).toHaveBeenCalledWith('token-1');
-        });
-
-        it('deve preservar UnauthorizedException original da service', () => {
-            service.getUserTransactions.mockImplementation(() => {
-                throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
-            });
-
-            try {
-                controller.getTransactions('token-invalido');
-            } catch (err) {
-                expect(err).toBeInstanceOf(UnauthorizedException);
-            }
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.getUserTransactions.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.getTransactions('token-1')
-            ).toThrow(BadRequestException);
-        });
+      expect(() => controller.signin({ username: 'joao', password: '123456' })).toThrow(
+        BadRequestException,
+      );
     });
 
-    describe('updateUser', () => {
-        it('deve retornar o PublicUserDto atualizado', () => {
-            const updated = mockPublicUser({ birthdate: '1995-05-10' });
-            service.updateUser.mockReturnValue(updated);
+    it('deve preservar a mensagem da BadRequestException original da service', () => {
+      const errorMessage = 'Username ou password inválidos';
+      service.signin.mockImplementation(() => {
+        throw new BadRequestException(errorMessage);
+      });
 
-            const result = controller.updateUser('token-1', { birthdate: '1995-05-10' });
+      try {
+        controller.signin({ username: 'joao', password: '123456' });
+      } catch (err) {
+        expect(err).toBeInstanceOf(BadRequestException);
+        expect((err as BadRequestException).message).toBe(errorMessage);
+      }
+    });
+  });
 
-            expect(result.birthdate).toBe('1995-05-10');
-        });
+  describe('getAllUsers', () => {
+    it('deve retornar uma lista de usuários quando o token é válido', () => {
+      const expectedUserId = 'uuid-1';
+      service.getAllUsers.mockReturnValue([mockPublicUser({ id: expectedUserId })]);
 
-        it('deve chamar service.updateUser com o token e dto recebidos', () => {
-            service.updateUser.mockReturnValue(mockPublicUser());
+      const result = controller.getAllUsers('token-1');
 
-            const dto = { birthdate: '1990-03-15' };
-            controller.updateUser('token-1', dto);
-
-            expect(service.updateUser).toHaveBeenCalledWith('token-1', dto);
-        });
-
-        it('deve preservar UnauthorizedException original da service', () => {
-            service.updateUser.mockImplementation(() => {
-                throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
-            });
-
-            try {
-                controller.updateUser('token-invalido', {});
-            } catch (err) {
-                expect(err).toBeInstanceOf(UnauthorizedException);
-            }
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.updateUser.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.updateUser('token-1', { birthdate: '1990-01-01' })
-            ).toThrow(BadRequestException);
-        });
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0].id).toBe(expectedUserId);
     });
 
-    describe('deleteUser', () => {
-        it('deve chamar service.deleteUser com o token recebido', () => {
-            service.deleteUser.mockReturnValue(undefined);
+    it('deve chamar service.getAllUsers com o token recebido', () => {
+      service.getAllUsers.mockReturnValue([]);
 
-            controller.deleteUser('token-1');
+      controller.getAllUsers('token-1');
 
-            expect(service.deleteUser).toHaveBeenCalledWith('token-1');
-        });
-
-        it('deve preservar UnauthorizedException original da service', () => {
-            service.deleteUser.mockImplementation(() => {
-                throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
-            });
-
-            try {
-                controller.deleteUser('token-invalido');
-            } catch (err) {
-                expect(err).toBeInstanceOf(UnauthorizedException);
-            }
-        });
-
-        it('deve encapsular erro inesperado em BadRequestException genérica', () => {
-            service.deleteUser.mockImplementation(() => {
-                throw new Error('Erro interno inesperado');
-            });
-
-            expect(() =>
-                controller.deleteUser('token-1')
-            ).toThrow(BadRequestException);
-        });
+      expect(service.getAllUsers).toHaveBeenCalledWith('token-1');
     });
+
+    it('deve preservar UnauthorizedException original da service', () => {
+      service.getAllUsers.mockImplementation(() => {
+        throw new UnauthorizedException('Você não tem permissão para consultar usuários');
+      });
+
+      try {
+        controller.getAllUsers('token-invalido');
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+      }
+    });
+
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.getAllUsers.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
+
+      expect(() => controller.getAllUsers('token-1')).toThrow(BadRequestException);
+    });
+  });
+
+  describe('getBalance', () => {
+    it('deve retornar { balance } quando o token é válido', () => {
+      service.getUserBalance.mockReturnValue(150);
+
+      const result = controller.getBalance('token-1');
+
+      expect(result).toEqual({ balance: 150 });
+    });
+
+    it('deve chamar service.getUserBalance com o token recebido', () => {
+      service.getUserBalance.mockReturnValue(0);
+
+      controller.getBalance('token-1');
+
+      expect(service.getUserBalance).toHaveBeenCalledWith('token-1');
+    });
+
+    it('deve preservar UnauthorizedException original da service', () => {
+      service.getUserBalance.mockImplementation(() => {
+        throw new UnauthorizedException('Você não tem permissão para consultar saldo');
+      });
+
+      try {
+        controller.getBalance('token-invalido');
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+      }
+    });
+
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.getUserBalance.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
+
+      expect(() => controller.getBalance('token-1')).toThrow(BadRequestException);
+    });
+  });
+
+  describe('getTransactions', () => {
+    it('deve retornar a lista de transações do usuário autenticado', () => {
+      const transactions: Transaction[] = [
+        { type: 'sent', toId: 'uuid-2', amount: 50, date: new Date().toISOString() },
+      ];
+      service.getUserTransactions.mockReturnValue(transactions);
+
+      const result = controller.getTransactions('token-1');
+
+      expect(result).toEqual(transactions);
+    });
+
+    it('deve chamar service.getUserTransactions com o token recebido', () => {
+      service.getUserTransactions.mockReturnValue([]);
+
+      controller.getTransactions('token-1');
+
+      expect(service.getUserTransactions).toHaveBeenCalledWith('token-1');
+    });
+
+    it('deve preservar UnauthorizedException original da service', () => {
+      service.getUserTransactions.mockImplementation(() => {
+        throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
+      });
+
+      try {
+        controller.getTransactions('token-invalido');
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+      }
+    });
+
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.getUserTransactions.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
+
+      expect(() => controller.getTransactions('token-1')).toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('deve retornar o PublicUserDto atualizado', () => {
+      const updated = mockPublicUser({ birthdate: '1995-05-10' });
+      service.updateUser.mockReturnValue(updated);
+
+      const result = controller.updateUser('token-1', { birthdate: '1995-05-10' });
+
+      expect(result.birthdate).toBe('1995-05-10');
+    });
+
+    it('deve chamar service.updateUser com o token e dto recebidos', () => {
+      service.updateUser.mockReturnValue(mockPublicUser());
+
+      const dto = { birthdate: '1990-03-15' };
+      controller.updateUser('token-1', dto);
+
+      expect(service.updateUser).toHaveBeenCalledWith('token-1', dto);
+    });
+
+    it('deve preservar UnauthorizedException original da service', () => {
+      service.updateUser.mockImplementation(() => {
+        throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
+      });
+
+      try {
+        controller.updateUser('token-invalido', {});
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+      }
+    });
+
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.updateUser.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
+
+      expect(() => controller.updateUser('token-1', { birthdate: '1990-01-01' })).toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('deve chamar service.deleteUser com o token recebido', () => {
+      service.deleteUser.mockReturnValue(undefined);
+
+      controller.deleteUser('token-1');
+
+      expect(service.deleteUser).toHaveBeenCalledWith('token-1');
+    });
+
+    it('deve preservar UnauthorizedException original da service', () => {
+      service.deleteUser.mockImplementation(() => {
+        throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
+      });
+
+      try {
+        controller.deleteUser('token-invalido');
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+      }
+    });
+
+    it('deve encapsular erro inesperado em BadRequestException genérica', () => {
+      service.deleteUser.mockImplementation(() => {
+        throw new Error('Erro interno inesperado');
+      });
+
+      expect(() => controller.deleteUser('token-1')).toThrow(BadRequestException);
+    });
+  });
 });
