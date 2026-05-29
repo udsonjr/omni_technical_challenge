@@ -1,8 +1,9 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SigninDto } from './dto/signin.dto';
+import { BearerToken } from '../auth/bearer-token.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -42,6 +43,37 @@ export class UsersController {
                 throw error;
             }
             throw new BadRequestException('Erro ao realizar login');
+        }
+    }
+
+    // API 4: lista de usuários. (Autenticada)
+    @Get()
+    @HttpCode(HttpStatus.OK)
+    getAllUsers(@BearerToken() token: string) {
+        try {
+            return this.usersService.getAllUsers(token);
+        }
+        catch (error) {
+            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new BadRequestException('Erro ao consultar usuários');
+        }
+    }
+
+    // API 5: Saldo de usuário. (Autenticada)
+    @Get('me/balance')
+    @HttpCode(HttpStatus.OK)
+    getBalance(@BearerToken() token: string) {
+        try {
+            const balance = this.usersService.getUserBalance(token);
+            return { balance: balance };
+        }
+        catch (error) {
+            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new BadRequestException('Erro ao consultar saldo');
         }
     }
 }

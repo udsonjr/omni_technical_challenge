@@ -44,4 +44,28 @@ export class UsersService {
         const authToken = this.authRepository.createToken(user.id);
         return new PublicAuthTokenDto(authToken);
     }
+
+    public getAllUsers(token: string): PublicUserDto[] {
+        const authToken = this.authRepository.validateToken(token);
+        if (!authToken) {
+            throw new UnauthorizedException('Você não tem permissão para consultar usuários');
+        }
+
+        const users = this.usersRepository.findAll();
+        return users.map(user => new PublicUserDto(user));
+    }
+
+    public getUserBalance(token: string): number {
+        const authToken = this.authRepository.validateToken(token);
+        if (!authToken) {
+            throw new UnauthorizedException('Você não tem permissão para consultar saldo');
+        }
+
+        const user = this.usersRepository.findById(authToken.userId);
+        if (!user) {
+            throw new UnauthorizedException('Você não tem permissão para consultar saldo');
+        }
+
+        return user.balance;
+    }
 }

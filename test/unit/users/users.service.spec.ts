@@ -152,5 +152,81 @@ describe('UsersService', () => {
 
             expect(authRepository.createToken).not.toHaveBeenCalled();
         });
-    })
+    });
+
+    describe('getAllUsers', () => {
+        it('deve retornar lista de PublicUserDto quando token é válido', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken());
+            usersRepository.findAll.mockReturnValue([mockUser()]);
+
+            const result = service.getAllUsers('token-1');
+
+            expect(result.length).toBe(1);
+            expect(result[0].id).toBe('uuid-1');
+            expect((result[0] as any).password).toBeUndefined();
+        });
+
+        it('deve chamar usersRepository.findAll quando token é válido', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken());
+            usersRepository.findAll.mockReturnValue([]);
+
+            service.getAllUsers('token-1');
+
+            expect(usersRepository.findAll).toHaveBeenCalled();
+        });
+
+        it('deve lançar UnauthorizedException se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            expect(() =>
+                service.getAllUsers('token-invalido')
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('não deve chamar usersRepository.findAll se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            try { service.getAllUsers('token-invalido'); }
+            catch {}
+
+            expect(usersRepository.findAll).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('getUserBalance', () => {
+        it('deve retornar o saldo do usuário autenticado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser({ id: 'uuid-1', balance: 250 }));
+
+            const result = service.getUserBalance('token-1');
+
+            expect(result).toBe(250);
+        });
+
+        it('deve chamar usersRepository.findById com o userId do token', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser());
+
+            service.getUserBalance('token-1');
+
+            expect(usersRepository.findById).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('deve lançar UnauthorizedException se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            expect(() =>
+                service.getUserBalance('token-invalido')
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('deve lançar UnauthorizedException se usuário não for encontrado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken());
+            usersRepository.findById.mockReturnValue(undefined);
+
+            expect(() =>
+                service.getUserBalance('token-1')
+            ).toThrow(UnauthorizedException);
+        });
+    });
 });
