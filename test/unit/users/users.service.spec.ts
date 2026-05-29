@@ -40,6 +40,8 @@ describe('UsersService', () => {
             findById: jest.fn(),
             findByUsername: jest.fn(),
             create: jest.fn(),
+            update: jest.fn(),
+            softDelete: jest.fn(),
         } as unknown as jest.Mocked<UsersRepository>;
 
         authRepository = {
@@ -229,6 +231,140 @@ describe('UsersService', () => {
             expect(() =>
                 service.getUserBalance('token-1')
             ).toThrow(UnauthorizedException);
+        });
+    });
+
+    describe('getUserTransactions', () => {
+        it('deve retornar as transações do usuário autenticado', () => {
+            const transactions = [{ type: 'sent' as const, toId: 'uuid-2', amount: 100, date: new Date().toISOString() }];
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser({ id: 'uuid-1', transactions }));
+
+            const result = service.getUserTransactions('token-1');
+
+            expect(result).toEqual(transactions);
+        });
+
+        it('deve chamar usersRepository.findById com o userId do token', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser());
+
+            service.getUserTransactions('token-1');
+
+            expect(usersRepository.findById).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('deve lançar UnauthorizedException se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            expect(() =>
+                service.getUserTransactions('token-invalido')
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('deve lançar UnauthorizedException se usuário não for encontrado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken());
+            usersRepository.findById.mockReturnValue(undefined);
+
+            expect(() =>
+                service.getUserTransactions('token-1')
+            ).toThrow(UnauthorizedException);
+        });
+    });
+
+    describe('updateUser', () => {
+        it('deve retornar PublicUserDto com dados atualizados', () => {
+            const updatedUser = mockUser({ birthdate: '1995-05-10' });
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser());
+            usersRepository.update.mockReturnValue(undefined);
+
+            const result = service.updateUser('token-1', { birthdate: '1995-05-10' });
+
+            expect(result.birthdate).toBe('1995-05-10');
+            expect((result as any).password).toBeUndefined();
+        });
+
+        it('deve chamar usersRepository.update com o usuário modificado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser());
+
+            service.updateUser('token-1', { birthdate: '1990-03-15' });
+
+            expect(usersRepository.update).toHaveBeenCalled();
+        });
+
+        it('não deve alterar birthdate se não fornecido no dto', () => {
+            const originalBirthdate = '2000-01-01';
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser({ birthdate: originalBirthdate }));
+
+            const result = service.updateUser('token-1', {});
+
+            expect(result.birthdate).toBe(originalBirthdate);
+        });
+
+        it('deve lançar UnauthorizedException se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            expect(() =>
+                service.updateUser('token-invalido', { birthdate: '1990-01-01' })
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('deve lançar UnauthorizedException se usuário não for encontrado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken());
+            usersRepository.findById.mockReturnValue(undefined);
+
+            expect(() =>
+                service.updateUser('token-1', { birthdate: '1990-01-01' })
+            ).toThrow(UnauthorizedException);
+        });
+    });
+
+    describe('deleteUser', () => {
+        it('deve chamar usersRepository.softDelete com o id do usuário autenticado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser({ id: 'uuid-1' }));
+
+            service.deleteUser('token-1');
+
+            expect(usersRepository.softDelete).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('deve chamar authRepository.expireToken com o token recebido', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+            usersRepository.findById.mockReturnValue(mockUser({ id: 'uuid-1' }));
+
+            service.deleteUser('token-1');
+
+            expect(authRepository.expireToken).toHaveBeenCalledWith('token-1');
+        });
+
+        it('deve lançar UnauthorizedException se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            expect(() =>
+                service.deleteUser('token-invalido')
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('deve lançar UnauthorizedException se usuário não for encontrado', () => {
+            authRepository.validateToken.mockReturnValue(mockAuthToken());
+            usersRepository.findById.mockReturnValue(undefined);
+
+            expect(() =>
+                service.deleteUser('token-1')
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('não deve chamar softDelete se token for inválido', () => {
+            authRepository.validateToken.mockReturnValue(undefined);
+
+            try { service.deleteUser('token-invalido'); }
+            catch {}
+
+            expect(usersRepository.softDelete).not.toHaveBeenCalled();
         });
     });
 });
