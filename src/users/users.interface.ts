@@ -1,4 +1,3 @@
-// Estrutura de um usuário na memória
 export interface User {
   id: string;
   username: string;

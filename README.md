@@ -206,3 +206,9 @@ Resposta: 204 NO CONTENT
 - [Exemplo de API simples em Node.js](https://github.com/luizomf/simple-node-api)
 
 Boa sorte! :)
+
+---
+
+## Documentação da implementação
+
+Para detalhes sobre a arquitetura, pipeline CI/CD e as APIs implementadas (incluindo exemplos de request/response), consulte o arquivo [documentation.md](./documentation.md).

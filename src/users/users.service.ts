@@ -44,11 +44,13 @@ export class UsersService {
       throw new UnauthorizedException('Username ou password inválidos');
     }
 
+    // Criação do token e retorno do DTO público, sem campos sensíveis
     const authToken = this.authRepository.createToken(user.id);
     return new PublicAuthTokenDto(authToken);
   }
 
   private validateToken(token: string): AuthToken {
+    // Função auxiliar para validar o token de autenticação
     const authToken = this.authRepository.validateToken(token);
     if (!authToken) {
       throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
@@ -57,6 +59,7 @@ export class UsersService {
   }
 
   private validateUser(userId: string): User {
+    // Função auxiliar para validar o usuário
     const user = this.usersRepository.findById(userId);
     if (!user) {
       throw new UnauthorizedException('Usuário não encontrado');
@@ -102,6 +105,7 @@ export class UsersService {
     const authToken = this.validateToken(token);
     const user = this.validateUser(authToken.userId);
 
+    // Soft delete do usuário e expiração do token
     this.usersRepository.softDelete(user.id);
     this.authRepository.expireToken(token);
   }

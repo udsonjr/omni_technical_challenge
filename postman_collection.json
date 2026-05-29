@@ -1,0 +1,436 @@
+{
+  "info": {
+    "_postman_id": "9e7fd970-4c42-4306-836a-9044b4cdb6ec",
+    "name": "Omni",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "18334857"
+  },
+  "item": [
+    {
+      "name": "1. Cadastro de usuário",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao1\",\r\n  \"password\": \"123456\",\r\n  \"birthdate\": \"2000-01-01\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users/signup",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users",
+            "signup"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Login de usuário",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao1\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users/signin",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users",
+            "signin"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3a. Refresh token",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "e296a16e-3094-46c2-aba5-5bfefec10219",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/auth/refresh",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "auth",
+            "refresh"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3b. Logout (invalidação de token)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "e296a16e-3094-46c2-aba5-5bfefec10219",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/auth/logout",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "auth",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3c. Validação de token",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "af9e671b-4f7a-48be-a363-ae7f1fbfcedb",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/auth/validate",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "auth",
+            "validate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Listar todos os usuários",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "b5ce1f92-fff3-49e2-a5cc-9476c26786d2",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Consultar saldo de um usuário",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "9ca8e8c0-7b87-49ac-94b5-b546429c9dda",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users/me/balance",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users",
+            "me",
+            "balance"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Histórico de transações do usuário",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "fbf93cec-1664-4dea-aa0a-a3c7967160bc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users/me/transactions",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users",
+            "me",
+            "transactions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Transferência de dinheiro",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "fbf93cec-1664-4dea-aa0a-a3c7967160bc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"toId\": \"2623b418-0867-4f7b-8c84-46d1092507d0\",\r\n  \"amount\": 21\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/transfer",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "transfer"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Atualizar dados do usuário",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "ce499a84-c253-4af0-a909-1395b6350054",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"birthdate\": \"2026-05-29\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users/me",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. Excluir usuário",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "29bd3136-8188-48db-8f27-0f2902520e8a",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"joao\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{env}}/users/me",
+          "host": [
+            "{{env}}"
+          ],
+          "path": [
+            "users",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "env",
+      "value": ""
+    }
+  ]
+}

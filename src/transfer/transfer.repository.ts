@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Transfer } from './transfer.interfaces';
 import { UsersRepository } from '../users/users.repository';
 
@@ -35,6 +35,14 @@ export class TransferRepository {
       amount: transfer.amount,
       date: transfer.date,
     });
+
+    // Atualiza o saldo do usuário de origem
+    const newFromUserBalance = fromUser.balance - transfer.amount;
+    if (newFromUserBalance < 0) {
+      throw new BadRequestException('Saldo insuficiente para realizar a transferência');
+    }
+    fromUser.balance = newFromUserBalance;
+
     this.usersRepository.update(fromUser);
 
     // Cria a transação do usuário de destino
@@ -48,6 +56,13 @@ export class TransferRepository {
       amount: transfer.amount,
       date: transfer.date,
     });
+
+    // Atualiza o saldo do usuário de destino
+    const newToUserBalance = toUser.balance + transfer.amount;
+    if (newToUserBalance < 0) {
+      throw new BadRequestException('Saldo insuficiente para realizar a transferência');
+    }
+    toUser.balance = newToUserBalance;
     this.usersRepository.update(toUser);
   }
 

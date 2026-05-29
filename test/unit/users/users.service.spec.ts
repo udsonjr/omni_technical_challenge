@@ -5,7 +5,6 @@ import { AuthRepository } from '../../../src/auth/auth.repository';
 import { User } from '../../../src/users/users.interface';
 import { AuthToken } from '../../../src/auth/auth.interfaces';
 
-// Fábrica de usuário para reutilizar nos testes
 const mockUser = (overrides: Partial<User> = {}): User => ({
   id: 'uuid-1',
   username: 'joao',
@@ -34,7 +33,6 @@ describe('UsersService', () => {
   let authRepository: jest.Mocked<AuthRepository>;
 
   beforeEach(() => {
-    // Cria um mock do usersRepository — substitui todos os métodos por jest.fn()
     usersRepository = {
       findAllActive: jest.fn(),
       findById: jest.fn(),
