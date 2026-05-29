@@ -18,4 +18,16 @@ export class AuthService {
 
         return { token: newAuthToken.token, expiresIn: '1h' };
     }
+
+    public logout(token: string): void {
+        if (!token) {
+            throw new BadRequestException('Token inválido');
+        }
+
+        this.authRepository.expireToken(token);
+    }
+
+    public validateToken(token: string): boolean {
+        return this.authRepository.validateToken(token) !== undefined;
+    }
 }
