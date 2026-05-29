@@ -18,7 +18,6 @@ export class TransferService {
 
     private validateToken(token: string): AuthToken {
         const authToken = this.authRepository.validateToken(token);
-        console.log(authToken);
         if (!authToken) {
             throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
         }
