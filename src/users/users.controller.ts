@@ -1,7 +1,8 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { BadRequestException } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { SigninDto } from './dto/signin.dto';
 
 @Controller('users')
 export class UsersController {
@@ -25,6 +26,21 @@ export class UsersController {
                 throw error;
             }
             throw new BadRequestException('Erro ao cadastrar usuário');
+        }
+    }
+
+    // API 2: login de usuário. (API pública)
+    @Post('signin')
+    @HttpCode(HttpStatus.OK)
+    signin(@Body() dto: SigninDto) {
+        try {
+            return this.usersService.signin(dto);
+        }
+        catch (error) {
+            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new BadRequestException('Erro ao realizar login');
         }
     }
 }
