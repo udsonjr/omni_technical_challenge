@@ -13,6 +13,8 @@ const mockUser = (overrides: Partial<User> = {}): User => ({
     birthdate: '2000-01-01',
     balance: 0,
     transactions: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
 });
 
@@ -34,7 +36,7 @@ describe('UsersService', () => {
     beforeEach(() => {
         // Cria um mock do usersRepository — substitui todos os métodos por jest.fn()
         usersRepository = {
-            findAll: jest.fn(),
+            findAllActive: jest.fn(),
             findById: jest.fn(),
             findByUsername: jest.fn(),
             create: jest.fn(),
@@ -157,7 +159,7 @@ describe('UsersService', () => {
     describe('getAllUsers', () => {
         it('deve retornar lista de PublicUserDto quando token é válido', () => {
             authRepository.validateToken.mockReturnValue(mockAuthToken());
-            usersRepository.findAll.mockReturnValue([mockUser()]);
+            usersRepository.findAllActive.mockReturnValue([mockUser()]);
 
             const result = service.getAllUsers('token-1');
 
@@ -168,11 +170,11 @@ describe('UsersService', () => {
 
         it('deve chamar usersRepository.findAll quando token é válido', () => {
             authRepository.validateToken.mockReturnValue(mockAuthToken());
-            usersRepository.findAll.mockReturnValue([]);
+            usersRepository.findAllActive.mockReturnValue([]);
 
             service.getAllUsers('token-1');
 
-            expect(usersRepository.findAll).toHaveBeenCalled();
+            expect(usersRepository.findAllActive).toHaveBeenCalled();
         });
 
         it('deve lançar UnauthorizedException se token for inválido', () => {
@@ -189,7 +191,7 @@ describe('UsersService', () => {
             try { service.getAllUsers('token-invalido'); }
             catch {}
 
-            expect(usersRepository.findAll).not.toHaveBeenCalled();
+            expect(usersRepository.findAllActive).not.toHaveBeenCalled();
         });
     });
 
