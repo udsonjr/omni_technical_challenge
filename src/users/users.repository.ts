@@ -15,4 +15,11 @@ export class UsersRepository {
     this.users.push(user);
     return user;
   }
+
+  update(user: User): void {
+    const index = this.users.findIndex(u => u.id === user.id);
+    if (index !== -1) {
+      this.users[index] = user;
+    }
+  }
 }

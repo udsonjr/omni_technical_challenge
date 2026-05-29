@@ -1,10 +1,13 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { AuthRepository } from '../auth/auth.repository';
+import { User } from './users.interface';
+import { AuthToken } from '../auth/auth.interfaces';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
 import { PublicAuthTokenDto } from '../auth/dto/auth-token.dto';
 import { SigninDto } from './dto/signin.dto';
+import { Transaction } from './users.interface';
 
 @Injectable()
 export class UsersService {
@@ -45,27 +48,40 @@ export class UsersService {
         return new PublicAuthTokenDto(authToken);
     }
 
-    public getAllUsers(token: string): PublicUserDto[] {
+    private validateToken(token: string): AuthToken {
         const authToken = this.authRepository.validateToken(token);
         if (!authToken) {
-            throw new UnauthorizedException('Você não tem permissão para consultar usuários');
+            throw new UnauthorizedException('Você não tem permissão para realizar esta ação');
         }
+        return authToken;
+    }
+
+    private validateUser(userId: string): User {
+        const user = this.usersRepository.findById(userId);
+        if (!user) {
+            throw new UnauthorizedException('Usuário não encontrado');
+        }
+        return user;
+    }
+
+    public getAllUsers(token: string): PublicUserDto[] {
+        this.validateToken(token);
 
         const users = this.usersRepository.findAll();
         return users.map(user => new PublicUserDto(user));
     }
 
     public getUserBalance(token: string): number {
-        const authToken = this.authRepository.validateToken(token);
-        if (!authToken) {
-            throw new UnauthorizedException('Você não tem permissão para consultar saldo');
-        }
-
-        const user = this.usersRepository.findById(authToken.userId);
-        if (!user) {
-            throw new UnauthorizedException('Você não tem permissão para consultar saldo');
-        }
+        const authToken = this.validateToken(token);
+        const user = this.validateUser(authToken.userId);
 
         return user.balance;
+    }
+
+    public getUserTransactions(token: string): Transaction[] {
+        const authToken = this.validateToken(token);
+        const user = this.validateUser(authToken.userId);
+
+        return user.transactions;
     }
 }

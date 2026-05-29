@@ -76,5 +76,20 @@ export class UsersController {
             throw new BadRequestException('Erro ao consultar saldo');
         }
     }
+
+    // API 6: Histórico de transações do usuário. (Autenticada)
+    @Get('me/transactions')
+    @HttpCode(HttpStatus.OK)
+    getTransactions(@BearerToken() token: string) {
+        try {
+            return this.usersService.getUserTransactions(token);
+        }
+        catch (error) {
+            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new BadRequestException('Erro ao consultar transações');
+        }
+    }
 }
     
