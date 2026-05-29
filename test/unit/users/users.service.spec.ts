@@ -1,7 +1,9 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../../../src/users/users.service';
 import { UsersRepository } from '../../../src/users/users.repository';
+import { AuthRepository } from '../../../src/auth/auth.repository';
 import { User } from '../../../src/users/users.interface';
+import { AuthToken } from '../../../src/auth/auth.interfaces';
 
 // Fábrica de usuário para reutilizar nos testes
 const mockUser = (overrides: Partial<User> = {}): User => ({
@@ -14,26 +16,44 @@ const mockUser = (overrides: Partial<User> = {}): User => ({
     ...overrides,
 });
 
+const mockAuthToken = (overrides: Partial<AuthToken> = {}): AuthToken => ({
+        id: 'uuid-1',
+        userId: 'uuid-1',
+        token: 'token-1',
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+        expired: false,
+        ...overrides,
+    });
+
 describe('UsersService', () => {
     let service: UsersService;
-    let repository: jest.Mocked<UsersRepository>;
+    let usersRepository: jest.Mocked<UsersRepository>;
+    let authRepository: jest.Mocked<AuthRepository>;
 
     beforeEach(() => {
-        // Cria um mock do repository — substitui todos os métodos por jest.fn()
-        repository = {
+        // Cria um mock do usersRepository — substitui todos os métodos por jest.fn()
+        usersRepository = {
             findAll: jest.fn(),
             findById: jest.fn(),
             findByUsername: jest.fn(),
             create: jest.fn(),
         } as unknown as jest.Mocked<UsersRepository>;
 
-        service = new UsersService(repository);
+        authRepository = {
+            createToken: jest.fn(),
+            refreshToken: jest.fn(),
+            expireToken: jest.fn(),
+            validateToken: jest.fn(),
+        } as unknown as jest.Mocked<AuthRepository>;
+
+        service = new UsersService(usersRepository, authRepository);
     });
 
     describe('signup', () => {
         it('deve criar usuário e retornar PublicUserDto sem a senha', () => {
-            repository.findByUsername.mockReturnValue(undefined);
-            repository.create.mockReturnValue(mockUser());
+            usersRepository.findByUsername.mockReturnValue(undefined);
+            usersRepository.create.mockReturnValue(mockUser());
 
             const result = service.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' });
 
@@ -42,14 +62,14 @@ describe('UsersService', () => {
             expect((result as any).password).toBeUndefined();
         });
 
-        it('deve chamar repository.create com os dados informados', () => {
-            repository.findByUsername.mockReturnValue(undefined);
-            repository.create.mockReturnValue(mockUser());
+        it('deve chamar usersRepository.create com os dados informados', () => {
+            usersRepository.findByUsername.mockReturnValue(undefined);
+            usersRepository.create.mockReturnValue(mockUser());
 
             const dto = { username: 'joao', password: '123456', birthdate: '2000-01-01' };
             service.signup(dto);
 
-            expect(repository.create).toHaveBeenCalledWith(dto);
+            expect(usersRepository.create).toHaveBeenCalledWith(dto);
         });
 
         it('deve lançar BadRequestException se username estiver vazio', () => {
@@ -65,20 +85,72 @@ describe('UsersService', () => {
         });
 
         it('deve lançar BadRequestException se usuário já existir', () => {
-            repository.findByUsername.mockReturnValue(mockUser());
+            usersRepository.findByUsername.mockReturnValue(mockUser());
 
             expect(() =>
                 service.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' })
             ).toThrow(BadRequestException);
         });
 
-        it('não deve chamar repository.create se o usuário já existir', () => {
-            repository.findByUsername.mockReturnValue(mockUser());
+        it('não deve chamar usersRepository.create se o usuário já existir', () => {
+            usersRepository.findByUsername.mockReturnValue(mockUser());
 
             try { service.signup({ username: 'joao', password: '123456', birthdate: '2000-01-01' }); }
             catch {}
 
-            expect(repository.create).not.toHaveBeenCalled();
+            expect(usersRepository.create).not.toHaveBeenCalled();
         });
     });
+
+    describe('signin', () => {
+        it('deve logar usuário e retornar token e expiresIn', () => {
+            const expectedToken = 'token-1';
+            usersRepository.findByUsername.mockReturnValue(mockUser());
+            authRepository.createToken.mockReturnValue(mockAuthToken({ token: expectedToken }));
+
+            const result = service.signin({ username: 'joao', password: '123456'});
+
+            expect(result.token).toBe(expectedToken);
+        });
+
+        it('deve chamar authRepository.createToken com os dados informados', () => {
+            const expectedUserId = 'uuid-1';
+            usersRepository.findByUsername.mockReturnValue(mockUser({ id: expectedUserId }));
+            authRepository.createToken.mockReturnValue(mockAuthToken({ userId: expectedUserId, token: 'token-1' }));
+
+            const dto = { username: 'joao', password: '123456', birthdate: '2000-01-01' };
+            service.signin(dto);
+
+            expect(authRepository.createToken).toHaveBeenCalledWith(expectedUserId);
+        });
+
+        it('deve lançar BadRequestException se username estiver vazio', () => {
+            expect(() =>
+                service.signin({ username: '', password: '123456' })
+            ).toThrow(BadRequestException);
+        });
+
+        it('deve lançar BadRequestException se password estiver vazio', () => {
+            expect(() =>
+                service.signin({ username: 'joao', password: '' })
+            ).toThrow(BadRequestException);
+        });
+
+        it('deve lançar UnauthorizedException se usuário não existir', () => {
+            usersRepository.findByUsername.mockReturnValue(undefined);
+
+            expect(() =>
+                service.signin({ username: 'joao', password: '123456' })
+            ).toThrow(UnauthorizedException);
+        });
+
+        it('não deve chamar authRepository.createToken se credenciais forem inválidas', () => {
+            usersRepository.findByUsername.mockReturnValue(undefined);
+
+            try { service.signin({ username: 'joao', password: '123456' }); }
+            catch {}
+
+            expect(authRepository.createToken).not.toHaveBeenCalled();
+        });
+    })
 });

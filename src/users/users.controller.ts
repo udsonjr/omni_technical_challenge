@@ -34,7 +34,8 @@ export class UsersController {
     @HttpCode(HttpStatus.OK)
     signin(@Body() dto: SigninDto) {
         try {
-            return this.usersService.signin(dto);
+            const authToken = this.usersService.signin(dto);
+            return { token: authToken.token, expiresAt: authToken.expiresAt };
         }
         catch (error) {
             if (error instanceof BadRequestException || error instanceof UnauthorizedException) {

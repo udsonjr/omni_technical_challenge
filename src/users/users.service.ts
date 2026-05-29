@@ -3,6 +3,7 @@ import { UsersRepository } from './users.repository';
 import { AuthRepository } from '../auth/auth.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
+import { PublicAuthTokenDto } from '../auth/dto/auth-token.dto';
 import { SigninDto } from './dto/signin.dto';
 
 @Injectable()
@@ -29,7 +30,7 @@ export class UsersService {
         return new PublicUserDto(user);
     }
 
-    public signin(dto: SigninDto): { token: string; expiresIn: string } {
+    public signin(dto: SigninDto): PublicAuthTokenDto {
         // Verificações de dados e lançamento de exceções
         if (!dto.username || !dto.password) {
             throw new BadRequestException('Username ou password inválidos');
@@ -41,6 +42,6 @@ export class UsersService {
         }
 
         const authToken = this.authRepository.createToken(user.id);
-        return { token: authToken.token, expiresIn: '1h' };
+        return new PublicAuthTokenDto(authToken);
     }
 }

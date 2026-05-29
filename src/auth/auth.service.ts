@@ -1,12 +1,13 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
+import { PublicAuthTokenDto } from './dto/auth-token.dto';
 
 @Injectable()
 export class AuthService {
 
     constructor(private readonly authRepository: AuthRepository) {}
 
-    public refreshToken(token: string): { token: string; expiresIn: string } {
+    public refreshToken(token: string): PublicAuthTokenDto {
         if (!token) {
             throw new BadRequestException('Token inválido');
         }
@@ -16,7 +17,7 @@ export class AuthService {
             throw new UnauthorizedException('Token inválido ou expirado');
         }
 
-        return { token: newAuthToken.token, expiresIn: '1h' };
+        return new PublicAuthTokenDto(newAuthToken);
     }
 
     public logout(token: string): void {

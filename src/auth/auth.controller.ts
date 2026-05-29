@@ -13,7 +13,8 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     refreshToken(@BearerToken() token: string) {
         try {
-            return this.authService.refreshToken(token);
+            const authToken = this.authService.refreshToken(token);
+            return { token: authToken.token, expiresAt: authToken.expiresAt };
         }
         catch (error) {
             if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
