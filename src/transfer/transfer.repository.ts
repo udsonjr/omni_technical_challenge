@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Transfer } from './transfer.interfaces';
 import { UsersRepository } from '../users/users.repository';
 
