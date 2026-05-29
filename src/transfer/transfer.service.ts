@@ -40,6 +40,10 @@ export class TransferService {
       throw new BadRequestException('Não é possível transferir para si mesmo');
     }
 
+    if (fromUser.balance < dto.amount) {
+      throw new BadRequestException('Saldo insuficiente');
+    }
+
     const transfer = this.transferRepository.createTransfer(toUser.id, fromUser.id, dto.amount);
     return transfer;
   }

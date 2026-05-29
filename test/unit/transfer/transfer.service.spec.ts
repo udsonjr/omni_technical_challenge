@@ -148,5 +148,29 @@ describe('TransferService', () => {
 
       expect(transferRepository.createTransfer).not.toHaveBeenCalled();
     });
+
+    it('deve lançar BadRequestException se o saldo do usuário de origem for insuficiente', () => {
+      authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+      usersRepository.findById
+        .mockReturnValueOnce(mockUser({ id: 'uuid-1', balance: 50 }))
+        .mockReturnValueOnce(mockUser({ id: 'uuid-2', username: 'maria' }));
+
+      expect(() => service.transfer('token-1', { toId: 'uuid-2', amount: 100 })).toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('não deve chamar transferRepository.createTransfer se o saldo for insuficiente', () => {
+      authRepository.validateToken.mockReturnValue(mockAuthToken({ userId: 'uuid-1' }));
+      usersRepository.findById
+        .mockReturnValueOnce(mockUser({ id: 'uuid-1', balance: 50 }))
+        .mockReturnValueOnce(mockUser({ id: 'uuid-2', username: 'maria' }));
+
+      try {
+        service.transfer('token-1', { toId: 'uuid-2', amount: 100 });
+      } catch {}
+
+      expect(transferRepository.createTransfer).not.toHaveBeenCalled();
+    });
   });
 });

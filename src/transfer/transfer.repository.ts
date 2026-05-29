@@ -37,11 +37,7 @@ export class TransferRepository {
     });
 
     // Atualiza o saldo do usuário de origem
-    const newFromUserBalance = fromUser.balance - transfer.amount;
-    if (newFromUserBalance < 0) {
-      throw new BadRequestException('Saldo insuficiente para realizar a transferência');
-    }
-    fromUser.balance = newFromUserBalance;
+    fromUser.balance -= transfer.amount;
 
     this.usersRepository.update(fromUser);
 
@@ -58,11 +54,8 @@ export class TransferRepository {
     });
 
     // Atualiza o saldo do usuário de destino
-    const newToUserBalance = toUser.balance + transfer.amount;
-    if (newToUserBalance < 0) {
-      throw new BadRequestException('Saldo insuficiente para realizar a transferência');
-    }
-    toUser.balance = newToUserBalance;
+    toUser.balance += transfer.amount;
+
     this.usersRepository.update(toUser);
   }
 
