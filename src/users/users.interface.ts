@@ -6,6 +6,9 @@ export interface User {
     birthdate: string;
     balance: number;
     transactions: Transaction[];
+    createdAt: string;
+    updatedAt: string;
+    deletedAt?: string;
 }
 
 export interface Transaction {

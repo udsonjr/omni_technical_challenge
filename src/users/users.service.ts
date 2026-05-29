@@ -8,6 +8,7 @@ import { PublicUserDto } from './dto/public-user.dto';
 import { PublicAuthTokenDto } from '../auth/dto/auth-token.dto';
 import { SigninDto } from './dto/signin.dto';
 import { Transaction } from './users.interface';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -67,7 +68,7 @@ export class UsersService {
     public getAllUsers(token: string): PublicUserDto[] {
         this.validateToken(token);
 
-        const users = this.usersRepository.findAll();
+        const users = this.usersRepository.findAllActive();
         return users.map(user => new PublicUserDto(user));
     }
 
@@ -83,5 +84,26 @@ export class UsersService {
         const user = this.validateUser(authToken.userId);
 
         return user.transactions;
+    }
+
+    public updateUser(token: string, dto: UpdateUserDto): PublicUserDto {
+        const authToken = this.validateToken(token);
+        const user = this.validateUser(authToken.userId);
+
+        // Nessa implementação, apenas o birthdate é atualizável. A senha tambem poderia ser, mas o ideal é ter um fluxo prórpio de updatePassword.
+        if (dto.birthdate) {
+            user.birthdate = dto.birthdate;
+        }
+
+        this.usersRepository.update(user);
+        return new PublicUserDto(user);
+    }
+
+    public deleteUser(token: string): void {
+        const authToken = this.validateToken(token);
+        const user = this.validateUser(authToken.userId);
+
+        this.usersRepository.softDelete(user.id);
+        this.authRepository.expireToken(token);
     }
 }

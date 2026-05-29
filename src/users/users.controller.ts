@@ -1,7 +1,8 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Put, Delete } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { SigninDto } from './dto/signin.dto';
 import { BearerToken } from '../auth/bearer-token.decorator';
 
@@ -89,6 +90,36 @@ export class UsersController {
                 throw error;
             }
             throw new BadRequestException('Erro ao consultar transações');
+        }
+    }
+
+    // API 8: Atualizar dados do usuário. (Autenticada)
+    @Put('me')
+    @HttpCode(HttpStatus.OK)
+    updateUser(@BearerToken() token: string, @Body() dto: UpdateUserDto) {
+        try {
+            return this.usersService.updateUser(token, dto);
+        }
+        catch (error) {
+            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new BadRequestException('Erro ao atualizar informações');
+        }
+    }
+
+    // API 9: Excluir usuário. (Autenticada)
+    @Delete('me')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteUser(@BearerToken() token: string) {
+        try {
+            return this.usersService.deleteUser(token);
+        }
+        catch (error) {
+            if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new BadRequestException('Erro ao deletar usuário');
         }
     }
 }
